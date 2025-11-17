@@ -24,10 +24,10 @@ class Room:
     get_long_description() -> str
         Produit une description complète de la salle incluant sa description et ses sorties.
     """
-
+    ## Modification du constructeur pour qu'il inclus le le préfixe "dans " à la description.
     def __init__(self, name, description):
         self.name = name
-        self.description = description
+        self.description = "dans " + description
         self.exits = {}
     
     def get_exit(self, direction):
