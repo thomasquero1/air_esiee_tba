@@ -1,105 +1,145 @@
-# Description: Game class
-
-# Import modules
-
-from room import Room
+# game_main.py
 from player import Player
-from command import Command
+from room import Room
+from character import Character
+from item import Item
 from actions import Actions
+from command import Command
+import random
+
 
 class Game:
-
-    # Constructor
     def __init__(self):
         self.finished = False
-        self.rooms = []
-        self.commands = {}
         self.player = None
-        self.valid_directions = set()
-    
-    # Setup the game
+        self.commands = {}
+
+
+        # Structure des directions valides et aliases
+        self.valid_directions = {"N", "S", "E", "W"}
+        self.direction_aliases = {
+            "N": "N", "NORD": "N", "Nord": "N", "nord": "N",
+            "S": "S", "SUD": "S", "Sud": "S", "sud": "S",
+            "E": "E", "EST": "E", "Est": "E", "est": "E",
+            "O": "W", "OUEST": "W", "Ouest": "W", "ouest": "W"
+        }
+
+
     def setup(self):
+        """Initialisation du jeu : commandes, salles, objets, PNJ et joueur."""
+        # Commandes
+        self.commands["look"] = Command("look", "", Actions.look, 0)
+        self.commands["go"] = Command("go", "<direction>", Actions.go, 1)
+        self.commands["back"] = Command("back", "", Actions.back, 0)
+        self.commands["take"] = Command("take", "<objet>", Actions.take, 1)
+        self.commands["use"] = Command("use", "<objet>", Actions.use, 1)
+        self.commands["talk"] = Command("talk", "<pnj>", Actions.talk, 1)
+        self.commands["inventory"] = Command("inventory", "", Actions.inventory, 0)
+        self.commands["help"] = Command("help", "", Actions.help, 0)
+        self.commands["quit"] = Command("quit", "", Actions.quit, 0)
 
-        # Setup commands
 
-        help = Command("help", " : afficher cette aide", Actions.help, 0)
-        self.commands["help"] = help
-        quit = Command("quit", " : quitter le jeu", Actions.quit, 0)
-        self.commands["quit"] = quit
-        go = Command("go", " <direction> : se déplacer dans une direction cardinale (N, E, S, O)", Actions.go, 1)
-        self.commands["go"] = go
-        
-        # Setup rooms
-        ## Modifications pour le dernier exercice de la partie 'Une première version'
-        forest = Room("Forest", "une forêt enchantée. Vous entendez une brise légère à travers la cime des arbres.")
-        self.rooms.append(forest)
-        tower = Room("Tower", "une immense tour en pierre qui s'élève au dessus des nuages.")
-        self.rooms.append(tower)
-        cave = Room("Cave", "une grotte profonde et sombre. Des voix semblent provenir des profondeurs.")
-        self.rooms.append(cave)
-        cottage = Room("Cottage", "un petit chalet pittoresque avec un toit de chaume. Une épaisse fumée verte sort de la cheminée.")
-        self.rooms.append(cottage)
-        swamp = Room("Swamp", "un marécage sombre et ténébreux. L'eau bouillonne, les abords sont vaseux.")
-        self.rooms.append(swamp)
-        castle = Room("Castle", "un énorme château fort avec des douves et un pont levis. Sur les tours, des flèches en or massif.")
-        self.rooms.append(castle)
+        # Création des salles
+        cockpit = Room("Cockpit", "dans le cockpit avec les panneaux ECAM et FCU")
+        self.rooms.append(cockpit)
+        seat = Room("Siège", "à votre siège de copilote")
+        self.rooms.append(seat)
+        panel_center = Room("Panneau central", "avec ECAM, MCDU et boutons principaux")
+        self.rooms.append(panel_center)
+        panel_top = Room("Panneau haut", "avec voyants et alarmes")
+        self.rooms.append(panel_top)
+        panel_bottom = Room("Panneau bas", "instruments secondaires")
+        self.rooms.append(panel_bottom)
+        altimeter = Room("Altimètre", "avec les mesures de hauteur")
+        self.rooms.append(altimeter)
+        radar = Room("Radar", "radar météo et navigation")
+        self.rooms.append(radar)
+        crew = Room("Crew", "zone de l'équipage")
+        self.rooms.append(crew)
+        business = Room("Business", "cabine business")
+        self.rooms.append(business)
+        economy = Room("Economy", "cabine economy")
+        self.rooms.append(economy)
+        back_crew = Room("Back Crew", "zone arrière de l'équipage")
+        self.rooms.append(back_crew)
 
-        # Create exits for rooms
 
-        forest.exits = {"N" : cave, "S" : castle, "O" : None}
-        tower.exits = {"N" : cottage, "E" : None, "S" : swamp}
-        cave.exits = {"N" : None, "E" : cottage, "S" : forest, "O" : None}
-        cottage.exits = {"N" : None, "E" : None, "S" : tower, "O" : cave}
-        swamp.exits = {"N" : tower, "E" : None, "S" : None, "O" : castle, "W" : tower}
-        castle.exits = {"N" : forest, "E" : swamp, "S" : None, "O" : None}
+        # Définition des sorties (exits) avec directions standard
+        cockpit.exits = {"S": seat}
+        seat.exits = {"N": cockpit, "E": panel_center}
+        panel_center.exits = {"W": seat, "S": panel_top}
+        panel_top.exits = {"N": panel_center, "S": panel_bottom}
+        panel_bottom.exits = {"N": panel_top, "E": altimeter}
+        altimeter.exits = {"W": panel_bottom, "S": radar}
+        radar.exits = {"N": altimeter, "E": crew}
+        crew.exits = {"W": radar, "S": business, "E": economy, "N": panel_top}
+        business.exits = {"N": crew}
+        economy.exits = {"W": crew, "S": back_crew}
+        back_crew.exits = {"N": economy}
+
+
+        # Ajout des items dans chaque salle
+        cockpit.items = [Item("QRH", "Checklist ECAM")]
+        seat.items = [Item("Casque", "Casque copilote")]
+        panel_center.items = [Item("FCU Check", "Vérifier FCU")]
+        panel_top.items = [Item("Alarms List", "Liste des alarmes")]
+        panel_bottom.items = [Item("Instruments Sec", "Vérification instruments")]
+        altimeter.items = [Item("Altimeter Check", "Vérification altimètre")]
+        radar.items = [Item("Radar Scan", "Scan radar")]
+        crew.items = [Item("Crew Checklist", "Vérification équipage")]
+        business.items = [Item("Passenger List", "Liste passagers Business")]
+        economy.items = [Item("Passenger Complaints", "Problèmes passagers")]
+        back_crew.items = [Item("Back Crew Checklist", "Checklist zone arrière")]
 
         for room in self.rooms:
             self.valid_directions.update(room.exits.keys())
 
-        # Setup player and starting room
 
-        self.player = Player(input("\nEntrez votre nom: "))
-        self.player.current_room = swamp
+        # Création du joueur
+        self.player = Player(input("Entrez votre nom: "))
+        self.player.current_room = cockpit
 
-    # Play the game
+
     def play(self):
-        self.setup()
-        self.print_welcome()
-        # Loop until the game is finished
+        print(f"\nBienvenue {self.player.name} dans Air ESIEE – Copilote A320")
         while not self.finished:
-            # Get the command from the player
-            self.process_command(input("> "))
-        return None
+            # Déplacement aléatoire de l'hôtesse
+            self.hostess.move()
+            cmd = input("> ")
+            self.process_command(cmd)
 
-    # Process the command entered by the player
-    def process_command(self, command_string) -> None:
 
-        # Split the command string into a list of words
-        list_of_words = command_string.split(" ")
-
-        command_word = list_of_words[0]
-        if not command_word :
-            return None
-        # If the command is not recognized, print an error message
-        if command_word not in self.commands.keys():
-            print(f"\nCommande '{command_word}' non reconnue. Entrez 'help' pour voir la liste des commandes disponibles.\n")
-        # If the command is recognized, execute it
+    def process_command(self, command_string):
+        if not command_string.strip():
+            return
+        list_of_words = command_string.split()
+        cmd_word = list_of_words[0]
+        if cmd_word not in self.commands:
+            print(f"Commande '{cmd_word}' non reconnue. Tapez 'help'.")
         else:
-            command = self.commands[command_word]
-            command.action(self, list_of_words, command.number_of_parameters)
+            cmd = self.commands[cmd_word]
+            # Vérification si la commande est 'go' pour normaliser la direction
+            if cmd_word == "go" and len(list_of_words) > 1:
+                user_input = list_of_words[1]
+                if user_input not in self.direction_aliases:
+                    print(f"Direction '{user_input}' invalide !")
+                    return
+                # Remplacer par la direction standard
+                list_of_words[1] = self.direction_aliases[user_input]
+            cmd.action(self, list_of_words, cmd.number_of_parameters)
 
-    # Print the welcome message
-    def print_welcome(self):
-        print(f"\nBienvenue {self.player.name} dans ce jeu d'aventure !")
-        print("Entrez 'help' si vous avez besoin d'aide.")
-        #
-        print(self.player.current_room.get_long_description())
-    
+
+
 
 def main():
-    # Create a game object and play the game
-    Game().play()
-    
+    game = Game()
+    game.setup()
+    game.play()
+
+
+
 
 if __name__ == "__main__":
     main()
+
+
