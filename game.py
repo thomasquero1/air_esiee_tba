@@ -129,17 +129,10 @@ class Game:
             cmd.action(self, list_of_words, cmd.number_of_parameters)
 
 
-
-
 def main():
     game = Game()
     game.setup()
     game.play()
 
-
-
-
 if __name__ == "__main__":
     main()
-
-
