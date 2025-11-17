@@ -63,31 +63,18 @@ class Game:
 
 
         # Définition des sorties (exits) avec directions standard
-        cockpit.exits = {"S": seat}
-        seat.exits = {"N": cockpit, "E": panel_center}
+        cockpit.exits = {"S": seat, "W" : crew}
+        seat.exits = {"N": cockpit, "E": panel_center, "S": radar}
         panel_center.exits = {"W": seat, "S": panel_top}
-        panel_top.exits = {"N": panel_center, "S": panel_bottom}
-        panel_bottom.exits = {"N": panel_top, "E": altimeter}
-        altimeter.exits = {"W": panel_bottom, "S": radar}
-        radar.exits = {"N": altimeter, "E": crew}
-        crew.exits = {"W": radar, "S": business, "E": economy, "N": panel_top}
-        business.exits = {"N": crew}
-        economy.exits = {"W": crew, "S": back_crew}
-        back_crew.exits = {"N": economy}
+        panel_top.exits = {"N": panel_center, "S": panel_bottom, "E":seat}
+        panel_bottom.exits = {"W": seat, "S": panel_top, "E": altimeter, "N": cockpit}
+        altimeter.exits = {"W": panel_bottom, "S": seat, "E": cockpit}
+        radar.exits = {"N": altimeter, "E": seat, "S": panel_bottom}
+        crew.exits = {"W": cockpit, "S": business, "E": economy}
+        business.exits = {"N": crew, "E": economy, "S": back_crew}
+        economy.exits = {"W": crew, "S": back_crew, "E": business}
+        back_crew.exits = {"N": economy, "W": business, "E": crew}
 
-
-        # Ajout des items dans chaque salle
-        cockpit.items = [Item("QRH", "Checklist ECAM")]
-        seat.items = [Item("Casque", "Casque copilote")]
-        panel_center.items = [Item("FCU Check", "Vérifier FCU")]
-        panel_top.items = [Item("Alarms List", "Liste des alarmes")]
-        panel_bottom.items = [Item("Instruments Sec", "Vérification instruments")]
-        altimeter.items = [Item("Altimeter Check", "Vérification altimètre")]
-        radar.items = [Item("Radar Scan", "Scan radar")]
-        crew.items = [Item("Crew Checklist", "Vérification équipage")]
-        business.items = [Item("Passenger List", "Liste passagers Business")]
-        economy.items = [Item("Passenger Complaints", "Problèmes passagers")]
-        back_crew.items = [Item("Back Crew Checklist", "Checklist zone arrière")]
 
         for room in self.rooms:
             self.valid_directions.update(room.exits.keys())
