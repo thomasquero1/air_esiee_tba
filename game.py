@@ -1,8 +1,6 @@
 # game_main.py
 from player import Player
 from room import Room
-from character import Character
-from item import Item
 from actions import Actions
 from command import Command
 import random
