@@ -4,6 +4,7 @@ from room import Room
 from actions import Actions
 from command import Command
 import random
+from item import Item
 
 
 class Game:
@@ -72,6 +73,20 @@ class Game:
         business.exits = {"N": crew, "E": economy, "S": back_crew}
         economy.exits = {"W": crew, "S": back_crew, "E": business}
         back_crew.exits = {"N": economy, "W": business, "E": crew}
+
+
+        # Items courts
+        cockpit.items = [Item("QRH", "Checklist ECAM")]
+        seat.items = [Item("Casque", "Casque copilote")]
+        panel_center.items = [Item("FCU Check", "Vérifier FCU")]
+        panel_top.items = [Item("Alarms List", "Liste des alarmes")]
+        panel_bottom.items = [Item("Instruments Sec", "Vérification instruments")]
+        altimeter.items = [Item("Altimeter Check", "Vérification altimètre")]
+        radar.items = [Item("Radar Scan", "Scan radar")]
+        crew.items = [Item("Crew Checklist", "Vérification équipage")]
+        business.items = [Item("Passenger List", "Liste passagers Business")]
+        economy.items = [Item("Passenger Complaints", "Problèmes passagers")]
+        back_crew.items = [Item("Back Crew Checklist", "Checklist zone arrière")]
 
 
         for room in self.rooms:

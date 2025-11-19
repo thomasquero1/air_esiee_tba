@@ -23,9 +23,10 @@ class Item:
         Retourne une représentation textuelle de l'objet.
     """
 
-    def __init__(self, name, description, weight):
+    def __init__(self, name, description, weight=0.0):
         self.name = name
         self.description = description
+        # weight is optional; default to 0.0 kg when not provided
         self.weight = weight
 
     def __str__(self):
