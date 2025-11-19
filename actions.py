@@ -41,6 +41,30 @@ class Actions:
                 return True
         print(f"Aucun objet nommé {item_name} ici.")
         return False
+    
+    @staticmethod
+    def drop(game, list_of_words, number_of_parameters):
+        if len(list_of_words) != number_of_parameters + 1:
+            print(MSG1.format(command_word=list_of_words[0]))
+            return False
+        item_name = list_of_words[1]
+        player = game.player
+        room = player.current_room
+
+        # Cherche l'objet dans l'inventaire du joueur (insensible à la casse)
+        for key, item in list(player.inventory.items()):
+            if item.name.lower() == item_name.lower() or key.lower() == item_name.lower():
+                # Retire de l'inventaire et ajoute à la room
+                removed = player.inventory.pop(key)
+                # Assure que room.items est une liste puis ajoute
+                if not isinstance(room.items, list):
+                    room.items = []
+                room.items.append(removed)
+                print(f"Vous déposez {removed.name}.")
+                return True
+
+        print(f"Vous ne possédez aucun objet nommé {item_name}.")
+        return False
 
     @staticmethod
     def use(game, list_of_words, number_of_parameters):

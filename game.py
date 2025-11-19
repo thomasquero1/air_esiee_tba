@@ -38,6 +38,7 @@ class Game:
         self.commands["quit"] = Command("quit", "", Actions.quit, 0)
         self.commands["history"] = Command("history", "", Actions.history, 0)
         self.commands["inventory"] = Command("inventory", "", Actions.inventory, 0)
+        self.commands["drop"] = Command("drop", "<objet>", Actions.drop, 1)
 
 
         # Création des salles
