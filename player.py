@@ -23,6 +23,7 @@ class Player:
         self.name = name
         self.current_room = None
         self.history = []
+        self.inventory = {}
     
     def move(self, direction):
         """
@@ -85,3 +86,19 @@ class Player:
             lines.append(f"\t- {room.name}\n")
         return "\n".join(lines)
         
+    def get_inventory(self):
+        """
+        Retourne l'inventaire des objets possédés par le joueur.
+
+        Returns
+        -------
+        chaine de caractères: lines
+            Liste des objets dans l'inventaire.
+        """
+        if not self.inventory:
+            return "\nL'inventaire est vide.\n"
+
+        lines = ["Inventaire des objets :"]
+        for item_name, item in self.inventory.items():
+            lines.append(f"\t- {str(item)}\n")
+        return "\n".join(lines)
