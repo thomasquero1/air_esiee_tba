@@ -29,6 +29,7 @@ class Room:
         self.name = name
         self.description = "dans " + description
         self.exits = {}
+        self.items = {}
     
     def get_exit(self, direction):
         """
@@ -75,3 +76,20 @@ class Room:
             Texte complet décrivant la salle et ses sorties.
         """
         return f"\nVous êtes {self.description}\n\n{self.get_exit_string()}\n"
+    
+    def get_inventory(self):
+        """
+        Retourne l'inventaire des objets présents dans la salle.
+
+        Returns
+        -------
+        dict
+            Dictionnaire des objets dans la salle, où les clés sont les noms des objets et les valeurs sont les objets Item.
+        """
+        if not self.inventory:
+            return "\nLa pièce n'a aucun objet récupérable\n"
+
+        lines = ["La pièce contient :"]
+        for item_name, item in self.inventory.items():
+            lines.append(f"\t- {str(item)}\n")
+        return "\n".join(lines)
