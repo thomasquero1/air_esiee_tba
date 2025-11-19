@@ -195,3 +195,39 @@ class Actions:
 
         print(game.player.get_history())
         return True
+    
+    def inventory(game, list_of_words, number_of_parameters):
+        """
+        Affiche l'inventaire du joueur.
+
+        Args:
+            game (Game): The game object.
+            list_of_words (list): The list of words in the command.
+            number_of_parameters (int): The number of parameters expected by the command.
+
+        Returns:
+            bool: True si la commande a été exécutée avec succès, False sinon.
+
+        Examples:
+
+        >>> from game import Game
+        >>> game = Game()
+        >>> game.setup()
+        >>> inventory(game, ["inventory"], 0)
+        True
+        >>> inventory(game, ["inventory", "N"], 0)
+        False
+        >>> inventory(game, ["inventory", "N", "E"], 0)
+        False
+
+        """
+
+        l = len(list_of_words)
+        # If the number of parameters is incorrect, print an error message and return False.
+        if l != number_of_parameters + 1:
+            command_word = list_of_words[0]
+            print(MSG0.format(command_word=command_word))
+            return False
+
+        print(game.player.get_inventory())
+        return True
