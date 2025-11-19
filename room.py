@@ -75,7 +75,11 @@ class Room:
         str
             Texte complet décrivant la salle et ses sorties.
         """
-        return f"\nVous êtes {self.description}\n\n{self.get_exit_string()}\n"
+        desc = f"\nVous êtes {self.description}\n{self.get_exit_string()}"
+        if self.items:
+            desc += "\nObjets ici: " + ", ".join([item.name for item in self.items])
+        return desc
+
     
     def get_inventory(self):
         """
