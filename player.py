@@ -24,6 +24,12 @@ class Player:
         self.current_room = None
         self.history = []
         self.inventory = {}
+        # score for identifying green keywords and completeness
+        self.score = 0
+        # track found green phrases per item name: { item_name: set(phrases) }
+        self.item_progress = {}
+        # set of item names that have been fully completed
+        self.completed_items = set()
     
     def move(self, direction):
         """
@@ -102,3 +108,19 @@ class Player:
         for item_name, item in self.inventory.items():
             lines.append(f"\t- {str(item)}\n")
         return "\n".join(lines)
+
+    def award_points(self, points, reason=None):
+        """Add points to the player and print a short message."""
+        self.score += points
+        if reason:
+            print(f"[+{points} pts] {reason} (Total: {self.score} pts)")
+        else:
+            print(f"[+{points} pts] (Total: {self.score} pts)")
+
+    def add_found_phrase(self, item_name, phrase):
+        """Record that the player found a phrase for a given item."""
+        s = self.item_progress.get(item_name)
+        if s is None:
+            s = set()
+            self.item_progress[item_name] = s
+        s.add(phrase)
