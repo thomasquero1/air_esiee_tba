@@ -30,6 +30,7 @@ class Room:
         self.description = "dans " + description
         self.exits = {}
         self.items = {}
+        self.characters = {}
     
     def get_exit(self, direction):
         """
@@ -78,6 +79,8 @@ class Room:
         desc = f"\nVous êtes {self.description}\n{self.get_exit_string()}"
         if self.items:
             desc += "\nObjets ici: " + ", ".join([item.name for item in self.items])
+        if self.characters:
+            desc += "\nPersonnages ici: " + ", ".join([char.name for char in self.characters])
         return desc
 
     

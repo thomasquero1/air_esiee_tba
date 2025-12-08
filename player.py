@@ -1,5 +1,7 @@
+from actor import Actor
+
 # Define the Player class.
-class Player:
+class Player(Actor):
     """
     Représente un joueur dans l'univers du jeu.
 
@@ -20,8 +22,7 @@ class Player:
     """
 
     def __init__(self, name):
-        self.name = name
-        self.current_room = None
+        super().__init__(name, current_room=None)
         self.history = []
         self.inventory = {}
         # score for identifying green keywords and completeness
