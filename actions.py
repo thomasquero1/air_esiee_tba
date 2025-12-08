@@ -166,7 +166,7 @@ class Actions:
         
         # Show character message
         if isinstance(character.msgs, list) and character.msgs:
-            print(f"\n{character.name}: {character.msgs[0]}\n")
+            print(f"\n{character.name}: {character.next_msg()}\n")
         else:
             print(f"\n{character.name}: ...")
         

@@ -48,3 +48,11 @@ class Character(Actor):
         else:
             if DEBUG: print(f"DEBUG: {self.name} a échoué le test 50% - reste immobile")
         return False
+    
+    def next_msg(self):
+        """Retourne le message suivant du personnage de manière cyclique."""
+        if not self.msgs:
+            return "..."
+        msg = self.msgs.pop(0)
+        self.msgs.append(msg)
+        return msg
