@@ -206,6 +206,15 @@ class Game:
                         found_any = True
 
         return found_any
+    
+    def get_next_rooms(self):
+        """Retourne une liste des salles accessibles depuis la salle actuelle de l'acteur."""
+        current_room = self.player.current_room
+        next_rooms = []
+        for direction, room in current_room.exits.items():
+            if room:
+                next_rooms.append((direction, room))
+        return next_rooms
 
 
 def main():

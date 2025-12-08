@@ -1,4 +1,5 @@
 from actor import Actor
+import random
 
 class Character(Actor):
     """Représente un personnage dans l'univers du jeu.
@@ -23,17 +24,20 @@ class Character(Actor):
     def __str__(self):
         return f"{self.name}: {self.description}"
     
-    def move(self, directions):
-        """Déplace le personnage dans une direction aléatoire parmi celles disponibles.
+    def move(self):
+        """Déplace le personnage vers une salle adjacente aléatoire avec une chance sur 2.
         
-        Parameters
-        ----------
-        directions : list
-            Liste des directions possibles où le personnage peut se déplacer.
+        Le personnage a 50% de chance de rester immobile et 50% de chance de se déplacer
+        vers une salle adjacente choisie aléatoirement.
         """
-        import random
-        if self.can_move and directions:
-            direction = random.choice(directions)
-            next_room = self.current_room.get_exit(direction)
-            if next_room:
-                self.current_room = next_room
+        if not self.can_move:
+            return False
+        
+        if random.random() < 0.5:
+            # Obtenir les sorties disponibles
+            if self.current_room.exits:
+                next_room = random.choice(list(self.current_room.exits.values()))
+                if next_room:
+                    self.current_room = next_room
+                    return True
+        return False
