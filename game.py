@@ -787,8 +787,23 @@ class Game:
 def main():
     game = Game()
     game.setup()
-    gui = GameGUI(game)
-    gui.run()
+    
+    # Check if graphical display is available
+    try:
+        # Try to initialize the GUI
+        gui = GameGUI(game)
+        gui.run()
+    except (tk.TclError, ImportError) as e:
+        # If Tkinter fails (no screen) or PIL is missing, fall back to console
+        print("=" * 60)
+        print("MODE CONSOLE ACTIVE")
+        print(f"Raison : {e}")
+        print("Lancement du mode textuel...")
+        print("=" * 60)
+        print()
+        
+        # Launch the text-only version
+        game.play()
 
 if __name__ == "__main__":
     main()
