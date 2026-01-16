@@ -161,14 +161,14 @@ class Actions:
         
         character = room.characters[character_name]
         
-        # # Check for quests
-        # game._check_quests(character, room)
-        
         # Show character message
         if isinstance(character.msgs, list) and character.msgs:
             print(f"\n{character.name}: {character.next_msg()}\n")
         else:
             print(f"\n{character.name}: ...")
+        
+        # Handle quests and points
+        game._check_quests(character, room)
         
         return True
 
