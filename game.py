@@ -12,19 +12,84 @@ from tkinter import font as tkfont
 from tkinter import messagebox
 import io
 import sys
-from PIL import Image, ImageDraw, ImageFont
+import re
+from PIL import Image, ImageDraw, ImageFont, ImageTk
 import threading
 import time
 
 
 class _StdoutRedirector:
-    """Redirige stdout vers un widget Text de Tkinter."""
+    """Redirige stdout vers un widget Text de Tkinter avec support ANSI."""
     def __init__(self, text_widget):
         self.text_widget = text_widget
+        self.setup_colors()
+    
+    def setup_colors(self):
+        """Configure les tags de couleur pour le widget Text."""
+        # Codes ANSI → Couleur
+        self.text_widget.tag_config("green", foreground="#00ff00")      # \033[92m
+        self.text_widget.tag_config("red", foreground="#ff0000")        # \033[91m
+        self.text_widget.tag_config("yellow", foreground="#ffff00")     # \033[93m
+        self.text_widget.tag_config("cyan", foreground="#00ffff")       # \033[96m
+        self.text_widget.tag_config("magenta", foreground="#ff00ff")    # \033[95m
+        self.text_widget.tag_config("white", foreground="#ffffff")      # \033[97m
+        self.text_widget.tag_config("default", foreground="#00ff00")    # Défaut
+    
+    def parse_ansi(self, text):
+        """
+        Parse les codes ANSI et retourne une liste de tuples (texte, tag).
+        Exemple: "\\033[92mBON\\033[0m test" → [("BON", "green"), (" test", "default")]
+        """
+        import re
+        
+        # Pattern pour les codes ANSI: \033[XXm
+        ansi_pattern = r'\033\[(\d+)m'
+        
+        # Mapping codes ANSI → tags Tkinter
+        color_map = {
+            '92': 'green',      # Vert
+            '91': 'red',        # Rouge
+            '93': 'yellow',     # Jaune
+            '96': 'cyan',       # Cyan
+            '95': 'magenta',    # Magenta
+            '97': 'white',      # Blanc
+            '0': 'default',     # Reset
+        }
+        
+        result = []
+        current_tag = 'default'
+        last_end = 0
+        
+        # Trouver tous les codes ANSI
+        for match in re.finditer(ansi_pattern, text):
+            # Ajouter le texte avant le code
+            if match.start() > last_end:
+                txt = text[last_end:match.start()]
+                if txt:
+                    result.append((txt, current_tag))
+            
+            # Mettre à jour le tag courant
+            code = match.group(1)
+            current_tag = color_map.get(code, 'default')
+            last_end = match.end()
+        
+        # Ajouter le texte restant
+        if last_end < len(text):
+            txt = text[last_end:]
+            if txt:
+                result.append((txt, current_tag))
+        
+        return result if result else [(text, 'default')]
     
     def write(self, string):
         if string:
-            self.text_widget.insert(tk.END, string)
+            # Parser les codes ANSI
+            segments = self.parse_ansi(string)
+            
+            # Insérer chaque segment avec son tag
+            for text, tag in segments:
+                self.text_widget.insert(tk.END, text, tag)
+            
             self.text_widget.see(tk.END)
             self.text_widget.update()
     
@@ -39,46 +104,59 @@ class GameGUI:
         self.game = game
         self.root = tk.Tk()
         self.root.title("Air ESIEE - Copilote A320")
-        self.root.geometry("1400x900")
+        self.root.geometry("1600x900")
         self.root.configure(bg="#1a1a1a")
         
         # Rediriger stdout
         self.output_buffer = io.StringIO()
         self.old_stdout = sys.stdout
         
+        # Dictionnaire pour mapper les salles aux images
+        self.room_image_map = {
+            "Cockpit": "Cockpit.jpg",
+            "Siège": "CopilotSeat.jpg",
+            "Panneau central": "CentralPanel.jpg",
+            "Panneau haut": "TopPanel.jpg",
+            "Panneau bas": "BottomPanel.jpg",
+            "Altimètre": "Altimeter.jpg",
+            "Radar": "Radar.jpg",
+            "Crew": "CrewZone.jpg",
+            "Business": "BusinessCabin.jpg",
+            "Economy": "EconomyCabin.jpg",
+            "Back Crew": "BackCrewZone.jpg",
+        }
+        
         # Créer les frames
         self.create_widgets()
-        self.room_images = self.generate_room_images()
         self.current_fade = 0
         self.displaying = False
         
     def create_widgets(self):
         """Crée les widgets principaux."""
-        # Frame gauche - Affichage
-        left_frame = tk.Frame(self.root, bg="#0a0a0a", width=900)
+        # Frame gauche - Affichage (50%)
+        left_frame = tk.Frame(self.root, bg="#0a0a0a")
         left_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         
-        # Canvas pour l'image de la salle
-        self.canvas = tk.Canvas(left_frame, bg="#000000", highlightthickness=0)
-        self.canvas.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
-        self.canvas.bind("<Button-1>", self.on_canvas_click)
+        # Label pour affichage de l'image
+        self.image_label = tk.Label(left_frame, bg="#000000")
+        self.image_label.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
         self.photo_image = None
         
-        # Frame droite - Texte et contrôles
-        right_frame = tk.Frame(self.root, bg="#1a1a1a", width=500)
+        # Frame droite - Console et contrôles (50%)
+        right_frame = tk.Frame(self.root, bg="#1a1a1a")
         right_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True, padx=10, pady=10)
         
-        # Zone de texte
-        text_label = tk.Label(right_frame, text="Jeu", bg="#1a1a1a", fg="#00ff00", 
+        # Zone de texte (console)
+        text_label = tk.Label(right_frame, text="Console du Jeu", bg="#1a1a1a", fg="#00ff00", 
                              font=("Courier", 10, "bold"))
         text_label.pack(anchor=tk.W, pady=5)
         
-        self.text_output = tk.Text(right_frame, height=25, width=60, 
+        self.text_output = tk.Text(right_frame, height=25, width=80, 
                                    bg="#0a0a0a", fg="#00ff00", 
-                                   font=("Courier", 9), wrap=tk.WORD)
+                                   font=("Courier", 8), wrap=tk.WORD)
         self.text_output.pack(fill=tk.BOTH, expand=True, pady=5)
         
-        # Scrollbar
+        # Scrollbar pour la console
         scrollbar = tk.Scrollbar(right_frame, command=self.text_output.yview)
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
         self.text_output.config(yscrollcommand=scrollbar.set)
@@ -98,259 +176,35 @@ class GameGUI:
         # Rediriger stdout
         sys.stdout = _StdoutRedirector(self.text_output)
     
-    def generate_room_images(self):
-        """Génère les images pour chaque salle."""
-        images = {}
+    def load_room_image(self, room_name):
+        """Charge l'image d'une salle depuis le dossier images."""
+        import os
+        image_filename = self.room_image_map.get(room_name)
+        if not image_filename:
+            return self.create_placeholder_image(room_name)
         
-        room_designs = {
-            "Cockpit": self.create_cockpit_image,
-            "Siège": self.create_seat_image,
-            "Panneau central": self.create_panel_center_image,
-            "Panneau haut": self.create_panel_top_image,
-            "Panneau bas": self.create_panel_bottom_image,
-            "Altimètre": self.create_altimeter_image,
-            "Radar": self.create_radar_image,
-            "Crew": self.create_crew_image,
-            "Business": self.create_business_image,
-            "Economy": self.create_economy_image,
-            "Back Crew": self.create_back_crew_image,
-        }
+        image_path = os.path.join(os.path.dirname(__file__), "images", image_filename)
         
-        for room_name, create_func in room_designs.items():
-            images[room_name] = create_func()
-        
-        return images
+        if os.path.exists(image_path):
+            try:
+                img = Image.open(image_path)
+                return img
+            except Exception as e:
+                print(f"Erreur lors du chargement de l'image {image_filename}: {e}")
+                return self.create_placeholder_image(room_name)
+        else:
+            # Image non trouvée, créer un placeholder
+            return self.create_placeholder_image(room_name)
     
-    def create_cockpit_image(self):
-        """Crée l'image du cockpit."""
+    def create_placeholder_image(self, room_name):
+        """Crée une image de placeholder si l'image n'existe pas."""
         img = Image.new("RGB", (880, 660), color="#001a33")
         draw = ImageDraw.Draw(img)
         
-        # Cadre cockpit
         draw.rectangle([50, 50, 830, 610], outline="#00ff00", width=3)
-        
-        # Sièges
-        draw.rectangle([100, 100, 250, 200], fill="#333333", outline="#00ff00", width=2)
-        draw.text((110, 150), "COMMANDANT", fill="#00ff00")
-        
-        draw.rectangle([280, 100, 430, 200], fill="#555555", outline="#ffff00", width=2)
-        draw.text((295, 150), "COPILOTE", fill="#ffff00")
-        
-        # Tableau de bord
-        draw.rectangle([100, 250, 830, 600], fill="#1a1a1a", outline="#00ff00", width=2)
-        draw.text((300, 280), "SYSTEMES AVIONIQUES", fill="#00ff00")
-        draw.text((150, 350), "ALT: 35000ft", fill="#00ff00")
-        draw.text((400, 350), "SPD: 450kt", fill="#00ff00")
-        draw.text((150, 400), "HDG: 090", fill="#00ff00")
-        draw.text((400, 400), "VS: 0 ft/min", fill="#00ff00")
-        
-        return img
-    
-    def create_seat_image(self):
-        """Crée l'image du siège."""
-        img = Image.new("RGB", (880, 660), color="#2a2a2a")
-        draw = ImageDraw.Draw(img)
-        
-        draw.rectangle([50, 50, 830, 610], outline="#0080ff", width=3)
-        draw.text((300, 100), "POSITION COPILOTE", fill="#0080ff")
-        
-        # Siège
-        draw.ellipse([300, 250, 580, 500], fill="#444444", outline="#0080ff", width=2)
-        draw.rectangle([350, 500, 530, 550], fill="#333333", outline="#0080ff", width=2)
-        
-        draw.text((200, 580), "Café chaud nearby...", fill="#00ff00")
-        
-        return img
-    
-    def create_panel_center_image(self):
-        """Crée l'image du panneau central."""
-        img = Image.new("RGB", (880, 660), color="#1a1a1a")
-        draw = ImageDraw.Draw(img)
-        
-        draw.rectangle([50, 50, 830, 610], outline="#ff8800", width=3)
-        draw.text((250, 80), "PANNEAU CENTRAL - ECAM", fill="#ff8800")
-        
-        # Affichage ECAM
-        draw.rectangle([100, 150, 780, 400], fill="#0a0a0a", outline="#ff8800", width=2)
-        draw.text((150, 170), "ECAM STATUS:", fill="#ff8800")
-        draw.text((150, 200), "Seatbelt: OFF", fill="#ff0000")
-        draw.text((150, 230), "No Smoking: ON", fill="#ff0000")
-        draw.text((150, 260), "X-Bleed: OFF", fill="#ff0000")
-        draw.text((150, 310), "Pressurization: AUTO", fill="#00ff00")
-        
-        draw.rectangle([100, 450, 780, 580], fill="#0a0a0a", outline="#ff8800", width=2)
-        draw.text((150, 470), "QRH disponible - Use pour voir checklist", fill="#ffff00")
-        
-        return img
-    
-    def create_panel_top_image(self):
-        """Crée l'image du panneau supérieur."""
-        img = Image.new("RGB", (880, 660), color="#1a0a1a")
-        draw = ImageDraw.Draw(img)
-        
-        draw.rectangle([50, 50, 830, 610], outline="#ff00ff", width=3)
-        draw.text((200, 80), "PANNEAU HAUT - ECLAIRAGE & ELECTRICITE", fill="#ff00ff")
-        
-        # Batteries
-        draw.rectangle([100, 150, 400, 250], fill="#0a0a0a", outline="#ff00ff", width=2)
-        draw.text((120, 170), "BATTERIES", fill="#ff00ff")
-        draw.text((120, 210), "Tension: 28.5V", fill="#00ff00")
-        
-        # Carburant
-        draw.rectangle([450, 150, 750, 250], fill="#0a0a0a", outline="#ff00ff", width=2)
-        draw.text((470, 170), "CARBURANT", fill="#ff00ff")
-        draw.text((470, 210), "Reste: 3000 kg", fill="#00ff00")
-        
-        # Lights
-        draw.rectangle([100, 300, 750, 500], fill="#0a0a0a", outline="#ff00ff", width=2)
-        draw.text((120, 320), "LIGHTS", fill="#ff00ff")
-        draw.text((120, 360), "Landing Light: ON", fill="#00ff00")
-        draw.text((120, 390), "Taxi Light: ON", fill="#00ff00")
-        draw.text((120, 420), "Cabin Light: AUTO", fill="#00ff00")
-        
-        return img
-    
-    def create_panel_bottom_image(self):
-        """Crée l'image du panneau inférieur."""
-        img = Image.new("RGB", (880, 660), color="#0a1a1a")
-        draw = ImageDraw.Draw(img)
-        
-        draw.rectangle([50, 50, 830, 610], outline="#00ff88", width=3)
-        draw.text((150, 80), "PANNEAU BAS - GAZ & COMMUNICATIONS", fill="#00ff88")
-        
-        # Manettes de gaz
-        draw.rectangle([100, 180, 400, 400], fill="#0a0a0a", outline="#00ff88", width=2)
-        draw.text((120, 200), "THROTTLE (GAZ)", fill="#00ff88")
-        draw.text((120, 260), "Moteur 1: IDLE", fill="#00ff00")
-        draw.text((120, 290), "Moteur 2: IDLE", fill="#00ff00")
-        draw.text((120, 340), "Volets: 1", fill="#00ff00")
-        
-        # Communications
-        draw.rectangle([450, 180, 750, 400], fill="#0a0a0a", outline="#00ff88", width=2)
-        draw.text((470, 200), "COMMUNICATIONS", fill="#00ff88")
-        draw.text((470, 260), "Radio: 121.5 MHz", fill="#00ff00")
-        draw.text((470, 290), "Status: Tower", fill="#00ff00")
-        draw.text((470, 340), "Transponder: 8681", fill="#00ff00")
-        
-        return img
-    
-    def create_altimeter_image(self):
-        """Crée l'image de l'altimètre."""
-        img = Image.new("RGB", (880, 660), color="#001a00")
-        draw = ImageDraw.Draw(img)
-        
-        draw.rectangle([50, 50, 830, 610], outline="#00ff00", width=3)
-        draw.text((250, 80), "ALTIMETRE & VARIOMETRE", fill="#00ff00")
-        
-        # Altimètre
-        draw.ellipse([150, 180, 450, 480], outline="#00ff00", width=3)
-        draw.text((250, 300), "35000 ft", fill="#00ff00")
-        
-        # Variomètre
-        draw.ellipse([500, 180, 800, 480], outline="#00ff00", width=3)
-        draw.text((620, 300), "VS: 0 ft/min", fill="#00ff00")
-        
-        return img
-    
-    def create_radar_image(self):
-        """Crée l'image du radar."""
-        img = Image.new("RGB", (880, 660), color="#1a1a1a")
-        draw = ImageDraw.Draw(img)
-        
-        draw.rectangle([50, 50, 830, 610], outline="#00ffff", width=3)
-        draw.text((250, 80), "RADAR METEO & NAVIGATION", fill="#00ffff")
-        
-        # Radar
-        draw.ellipse([200, 200, 500, 500], outline="#00ffff", width=2)
-        draw.text((280, 350), "CLEAR", fill="#00ff00")
-        
-        # Navigation
-        draw.rectangle([550, 200, 800, 500], fill="#0a0a0a", outline="#00ffff", width=2)
-        draw.text((570, 230), "NAVIGATION", fill="#00ffff")
-        draw.text((570, 280), "Route: ORLY", fill="#00ff00")
-        draw.text((570, 310), "Distance: 150nm", fill="#00ff00")
-        draw.text((570, 340), "ETA: 12:30", fill="#00ff00")
-        
-        return img
-    
-    def create_crew_image(self):
-        """Crée l'image de la zone équipage."""
-        img = Image.new("RGB", (880, 660), color="#2a1a1a")
-        draw = ImageDraw.Draw(img)
-        
-        draw.rectangle([50, 50, 830, 610], outline="#ff6600", width=3)
-        draw.text((250, 80), "ZONE EQUIPAGE", fill="#ff6600")
-        
-        # Hôtesse
-        draw.ellipse([300, 200, 450, 350], fill="#ffaa00", outline="#ff6600", width=2)
-        draw.text((310, 270), "Hôtesse", fill="#000000")
-        
-        draw.text((200, 420), "L'hôtesse semble triste...", fill="#ff6600")
-        draw.text((200, 460), "Peut-être un café l'aiderait?", fill="#ffff00")
-        
-        return img
-    
-    def create_business_image(self):
-        """Crée l'image de la cabine business."""
-        img = Image.new("RGB", (880, 660), color="#1a1a1a")
-        draw = ImageDraw.Draw(img)
-        
-        draw.rectangle([50, 50, 830, 610], outline="#cccccc", width=3)
-        draw.text((250, 80), "CABINE BUSINESS", fill="#cccccc")
-        
-        # Passagers
-        for i in range(3):
-            draw.rectangle([100 + i*200, 200, 180 + i*200, 300], 
-                          fill="#666666", outline="#cccccc", width=2)
-            draw.text((105 + i*200, 240), f"P{i+1}", fill="#ffffff")
-        
-        draw.text((150, 420), "Passager 1 en Business", fill="#cccccc")
-        draw.text((150, 460), "Demande de l'eau", fill="#ffff00")
-        
-        return img
-    
-    def create_economy_image(self):
-        """Crée l'image de la cabine économique."""
-        img = Image.new("RGB", (880, 660), color="#1a1a1a")
-        draw = ImageDraw.Draw(img)
-        
-        draw.rectangle([50, 50, 830, 610], outline="#888888", width=3)
-        draw.text((250, 80), "CABINE ECONOMY", fill="#888888")
-        
-        # Sièges
-        for row in range(2):
-            for col in range(4):
-                x = 100 + col*170
-                y = 150 + row*150
-                draw.rectangle([x, y, x+140, y+120], fill="#333333", outline="#888888", width=1)
-        
-        draw.text((150, 450), "Un passager semble malade...", fill="#888888")
-        draw.text((150, 490), "Besoin d'aide médicale", fill="#ff0000")
-        
-        return img
-    
-    def create_back_crew_image(self):
-        """Crée l'image de la zone arrière équipage."""
-        img = Image.new("RGB", (880, 660), color="#1a1a0a")
-        draw = ImageDraw.Draw(img)
-        
-        draw.rectangle([50, 50, 830, 610], outline="#ffff00", width=3)
-        draw.text((200, 80), "ZONE ARRIERE EQUIPAGE", fill="#ffff00")
-        
-        # Caféière
-        draw.rectangle([150, 200, 350, 350], fill="#8B4513", outline="#ffff00", width=2)
-        draw.text((160, 270), "CAFE", fill="#ffff00")
-        
-        # Provisions
-        draw.rectangle([450, 200, 650, 350], fill="#666666", outline="#ffff00", width=2)
-        draw.text((460, 270), "PROVISIONS", fill="#ffff00")
-        
-        # Passagers
-        draw.ellipse([100, 420, 250, 550], fill="#ffcc00", outline="#ffff00", width=2)
-        draw.text((130, 480), "Passager 3", fill="#000000")
-        
-        draw.text((350, 450), "Nerveux", fill="#ffff00")
-        draw.text((350, 490), "Quand atterrissons-nous?", fill="#ff8800")
+        draw.text((250, 250), f"{room_name}", fill="#00ff00")
+        draw.text((200, 300), "Image non trouvée", fill="#ff6600")
+        draw.text((150, 350), "Mettez une image dans le dossier 'images/'", fill="#ffff00")
         
         return img
     
@@ -362,85 +216,36 @@ class GameGUI:
         self.displaying = True
         room = self.game.player.current_room
         
-        if fade_transition and self.photo_image:
-            # Transition fondu en noir
-            self.animate_fade_out(room)
-        else:
-            self.show_room_image(room)
+        # Charger l'image de la salle
+        img = self.load_room_image(room.name)
+        self.show_room_image(room, img)
         
         # Afficher la description
         print(room.get_long_description())
         self.displaying = False
     
-    def animate_fade_out(self, next_room):
-        """Anime le fondu en noir."""
-        img = self.room_images[next_room.name]
-        
-        for alpha in range(0, 256, 20):
-            fade_img = Image.new("RGBA", img.size, (0, 0, 0, alpha))
-            if self.photo_image:
-                composite = Image.new("RGB", img.size)
-                composite.paste(self.photo_image, (0, 0))
-                composite = Image.alpha_composite(
-                    Image.new("RGBA", img.size, (255, 255, 255, 255)),
-                    Image.new("RGBA", composite.size, (0, 0, 0, 0))
-                )
-            time.sleep(0.01)
-        
-        self.show_room_image(next_room)
-    
-    def show_room_image(self, room):
+    def show_room_image(self, room, img):
         """Affiche l'image de la salle."""
-        img = self.room_images[room.name]
+        # Redimensionner l'image pour s'adapter au label
+        label_width = 750
+        label_height = 660
         
-        # Redimensionner si nécessaire
-        canvas_width = self.canvas.winfo_width()
-        canvas_height = self.canvas.winfo_height()
-        if canvas_width > 1:
-            img = img.resize((canvas_width - 20, canvas_height - 20))
+        # Calculer le ratio d'aspect
+        img_ratio = img.width / img.height
+        label_ratio = label_width / label_height
         
-        self.photo_image = tk.PhotoImage(file=None)
-        self.photo_image = ImageTk.PhotoImage(img)
-        self.canvas.create_image(0, 0, image=self.photo_image, anchor=tk.NW)
+        if img_ratio > label_ratio:
+            # L'image est plus large, adapter par la largeur
+            new_width = label_width
+            new_height = int(label_width / img_ratio)
+        else:
+            # L'image est plus haute, adapter par la hauteur
+            new_height = label_height
+            new_width = int(label_height * img_ratio)
         
-        # Ajouter les boutons pour les PNJ
-        self.add_character_buttons(room)
-    
-    def add_character_buttons(self, room):
-        """Ajoute des boutons pour chaque PNJ."""
-        self.canvas.delete("npc_button")
-        
-        char_positions = {
-            "captain": (200, 150),
-            "hostess": (350, 280),
-            "passenger1": (250, 260),
-            "passenger2": (450, 350),
-            "passenger3": (150, 480),
-        }
-        
-        for char_name, character in room.characters.items():
-            if char_name in char_positions:
-                x, y = char_positions[char_name]
-                self.canvas.create_oval(
-                    x-20, y-20, x+20, y+20,
-                    fill="#ffff00", outline="#ff8800", width=2, tags="npc_button"
-                )
-                self.canvas.create_text(
-                    x, y, text=char_name[:3].upper(), 
-                    fill="#000000", font=("Arial", 8, "bold"), tags="npc_button"
-                )
-                self.canvas.tag_bind("npc_button", "<Button-1>", 
-                                   lambda e, cn=char_name: self.on_npc_click(cn))
-    
-    def on_canvas_click(self, event):
-        """Gère les clics sur le canvas."""
-        pass
-    
-    def on_npc_click(self, char_name):
-        """Gère les clics sur les PNJ."""
-        self.command_input.delete(0, tk.END)
-        self.command_input.insert(0, f"talk {char_name}")
-        self.on_command_enter(None)
+        img_resized = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
+        self.photo_image = ImageTk.PhotoImage(img_resized)
+        self.image_label.config(image=self.photo_image)
     
     def on_command_enter(self, event):
         """Gère la saisie de commande."""
@@ -451,6 +256,17 @@ class GameGUI:
             print(f"> {command}")
             self.game.process_command(command)
             
+            # Vérifier si le jeu est terminé
+            if self.game.finished:
+                # Afficher le grade final
+                self.game._display_final_grade()
+                # Désactiver l'entrée de commande
+                self.command_input.config(state=tk.DISABLED)
+                print("\n[Jeu terminé - Fenêtre fermeture dans 5 secondes...]")
+                # Fermer après 5 secondes
+                self.root.after(5000, self.root.destroy)
+                return
+            
             # Mettre à jour l'affichage
             if command.split()[0] == "go":
                 self.display_room(fade_transition=True)
@@ -459,13 +275,6 @@ class GameGUI:
     
     def run(self):
         """Lance l'application GUI."""
-        try:
-            from PIL import ImageTk
-            globals()['ImageTk'] = ImageTk
-        except ImportError:
-            messagebox.showerror("Erreur", "Pillow est requis. Installez avec: pip install Pillow")
-            return
-        
         # Affichage initial
         self.display_room(fade_transition=False)
         self.root.mainloop()
