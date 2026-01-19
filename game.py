@@ -517,7 +517,7 @@ class Game:
         self.rooms.append(panel_top)
         panel_bottom = Room("Panneau bas", "Manettes de gaz, volets, communications\n Volet a 1\n -- Throttle set to idle\n - Radio tuned to tower")
         self.rooms.append(panel_bottom)
-        altimeter = Room("Altimètre", "avec les mesures de hauteur\n Altitude: 35000ft\n Vertical Speed: 0ft/min")
+        altimeter = Room("Altimètre", "avec les mesures de hauteur\n Altitude: 35000ft\n Vitesse verticale: 0ft/min")
         self.rooms.append(altimeter)
         radar = Room("Radar", "radar météo et navigation,\n Météo: Clair, Navigation: Sur route")
         self.rooms.append(radar)
@@ -563,7 +563,7 @@ class Game:
         ]
         panel_bottom.items = [Item("InstrumentsCheck", "Vérification instruments : \033[92mVolet a 1\033[0m\n -- \033[92mThrottle set to idle\033[0m\n - \033[92mRadio tuned to tower\033[0m",
                         edu_message="Vérifier les instruments assure que les commandes de vol et communications sont conformes aux paramètres attendus avant manœuvres; c'est une routine de sécurité indispensable (imaginez les gaz a fond pendant tout le vol ==> consomation excessive de carburant ==> crash !). Les checklist sont essentielles pour arriver a cela et les répeter a l'oral a son partenaire de vol comme vous le faites est parfait.")]
-        altimeter.items = [Item("FCUCheck", "Vous volez a une altitude de croisière de \033[92m35000 pieds\033[0m, \033[92mvitesse vertical 0 ft/min\033[0m",
+        altimeter.items = [Item("FCUCheck", "Vous volez a une altitude de croisière de \033[92m35000 pieds\033[0m, \033[92mvitesse verticale 0 ft/min\033[0m",
                     edu_message="Le FCU donne les paramètres de vol (altitude/vitesse verticale) — surveiller ces valeurs est fondamental pour maintenir la trajectoire et la sécurité du vol. (ex: eviter de descendre trop bas aux alentour de l'hymalaya ou d'éviter les collisions avec d'autres avions)")]
         panel_top.items = [Item("AlarmsList", "\033[92mAucune alarme en cours\033[0m, \033[92mSurtension (38V)\033[0m \033[92mCarburant 3000 kg\033[0m",
                     edu_message="Lister les alarmes et états électriques permet d'anticiper et prioriser les actions en cas d'avarie; gérer l'énergie et carburant est essentiel en gestion de vol.")]
@@ -581,7 +581,7 @@ class Game:
         # Ajouter des objets supplémentaires pour les quêtes
         back_crew.items.append(Item("Café", "Un café chaud et revigorant"))
         back_crew.items.append(Item("Eau", "Une bouteille d'eau fraîche"))
-        back_crew.items.append(Item("Trousse médicale", "Une trousse de premiers secours bien équipée"))
+        back_crew.items.append(Item("TrousseMédicale", "Une trousse de premiers secours bien équipée"))
 
         for room in self.rooms:
             self.valid_directions.update(room.exits.keys())
