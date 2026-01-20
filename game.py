@@ -33,7 +33,8 @@ class _StdoutRedirector:
         self.text_widget.tag_config("cyan", foreground="#00ffff")       # \033[96m
         self.text_widget.tag_config("magenta", foreground="#ff00ff")    # \033[95m
         self.text_widget.tag_config("white", foreground="#ffffff")      # \033[97m
-        self.text_widget.tag_config("default", foreground="#00ff00")    # Défaut
+        self.text_widget.tag_config("default", foreground="#ffffff")    # Texte par défaut en blanc
+        # Ne pas forcer le background ici: il est défini dans la GUI
     
     def parse_ansi(self, text):
         """
@@ -147,12 +148,12 @@ class GameGUI:
         right_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True, padx=10, pady=10)
         
         # Zone de texte (console)
-        text_label = tk.Label(right_frame, text="Console du Jeu", bg="#1a1a1a", fg="#00ff00", 
+        text_label = tk.Label(right_frame, text="Console du Jeu", bg="#1a1a1a", fg="#ffffff", 
                              font=("Courier", 10, "bold"))
         text_label.pack(anchor=tk.W, pady=5)
         
         self.text_output = tk.Text(right_frame, height=25, width=80, 
-                                   bg="#0a0a0a", fg="#00ff00", 
+                                   bg="#0a0a0a", fg="#ffffff", 
                                    font=("Courier", 8), wrap=tk.WORD)
         self.text_output.pack(fill=tk.BOTH, expand=True, pady=5)
         
@@ -165,11 +166,11 @@ class GameGUI:
         input_frame = tk.Frame(right_frame, bg="#1a1a1a")
         input_frame.pack(fill=tk.X, pady=5)
         
-        tk.Label(input_frame, text="> ", bg="#1a1a1a", fg="#00ff00", 
+        tk.Label(input_frame, text="> ", bg="#1a1a1a", fg="#ffffff", 
                 font=("Courier", 10, "bold")).pack(side=tk.LEFT)
         
-        self.command_input = tk.Entry(input_frame, bg="#0a0a0a", fg="#00ff00", 
-                                     font=("Courier", 10), insertbackground="#00ff00")
+        self.command_input = tk.Entry(input_frame, bg="#0a0a0a", fg="#ffffff", 
+                         font=("Courier", 10), insertbackground="#ffffff")
         self.command_input.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=5)
         self.command_input.bind("<Return>", self.on_command_enter)
         
@@ -355,7 +356,7 @@ class Game:
 
 
         # Items courts (ajout de messages éducatifs pour chaque checklist)
-        seat.items = [Item("Casque", "Vous contactez la Tour :\n \033[92mAirESIEE 11² bonjour, Transpondeur 8681\033[0m",
+        seat.items = [Item("Casque", "Vous contactez la Tour :\n \033[92mAirESIEE 11² bonjour,\033[0m veuillez régler le \033[92mTranspondeur 8681\033[0m",
                    edu_message="Le casque et la phrase de contact permettent d'établir une communication claire avec la tour; la phrase type facilite l'identification et la coordination en aviation.")]
         panel_center.items = [
         Item(
@@ -501,6 +502,9 @@ class Game:
         normalized = command_string.lower()
         found_any = False
 
+        # Inclure les items posés dans les salles ET ceux dans l'inventaire du joueur.
+        inventory_items = list(getattr(self.player, "inventory", {}).values())
+
         for room in self.rooms:
             # room.items peut être une liste ou un dict
             items = None
@@ -508,9 +512,8 @@ class Game:
                 items = list(room.items.values())
             else:
                 items = room.items
-            if not items:
-                continue
-            for item in items:
+            room_items = items or []
+            for item in list(room_items) + inventory_items:
                 # certains items peuvent ne pas avoir d'attribut green_phrases
                 phrases = getattr(item, 'green_phrases', [])
                 if not phrases:
