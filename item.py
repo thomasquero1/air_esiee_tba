@@ -5,7 +5,7 @@ class Item:
     """
     Objet ou checklist dans un lieu.
     
-    Attributes:
+    Attributs :
         name (str): Nom de l'objet
         description (str): Description détaillée
         weight (float): Poids de l'objet en kg
@@ -16,12 +16,12 @@ class Item:
         self.description = description
         self.weight = weight
         self.use_count = 0
-        # educational message to show when the checklist is fully completed
+        # message pédagogique affiché lorsque la checklist est entièrement complétée
         self.edu_message = edu_message
 
-        # extract green-highlighted phrases from the description (ANSI code \033[92m ... \033[0m)
+        # extraire les phrases surlignées en vert depuis la description (code ANSI \033[92m ... \033[0m)
         self.green_phrases = re.findall(r"\x1b\[92m(.*?)\x1b\[0m", description)
-        # normalize phrases for matching
+        # normaliser les phrases pour la comparaison
         self.green_phrases = [p.strip() for p in self.green_phrases if p.strip()]
 
     def use(self):

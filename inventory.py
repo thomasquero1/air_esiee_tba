@@ -1,4 +1,4 @@
-# Define the Inventory Class.
+# Définir la classe Inventory.
 
 class Inventory:
     """

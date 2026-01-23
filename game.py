@@ -43,10 +43,10 @@ class _StdoutRedirector:
         """
         import re
         
-        # Pattern pour les codes ANSI: \033[XXm
+        # Motif pour les codes ANSI : \033[XXm
         ansi_pattern = r'\033\[(\d+)m'
         
-        # Mapping codes ANSI → tags Tkinter
+        # Correspondance codes ANSI → tags Tkinter
         color_map = {
             '92': 'green',      # Vert
             '91': 'red',        # Rouge
@@ -54,7 +54,7 @@ class _StdoutRedirector:
             '96': 'cyan',       # Cyan
             '95': 'magenta',    # Magenta
             '97': 'white',      # Blanc
-            '0': 'default',     # Reset
+            '0': 'default',     # Réinitialisation
         }
         
         result = []

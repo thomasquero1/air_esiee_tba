@@ -1,4 +1,4 @@
-# Define the Room class.
+# Définir la classe Room.
 class Room:
     """
     Modélise une salle du jeu.
@@ -36,12 +36,12 @@ class Room:
         """
         Retourne la salle reliée dans une direction donnée.
 
-        Parameters
+        Paramètres
         ----------
         direction : str
             La direction dans laquelle le joueur souhaite se rendre (ex : "nord", "est").
 
-        Returns
+        Retourne
         -------
         Room | None
             La salle reliée à cette direction, ou None si aucune sortie n'existe.
@@ -52,7 +52,7 @@ class Room:
         """
         Génère une chaîne de caractères indiquant toutes les sorties possibles.
 
-        Returns
+        Retourne
         -------
         str
             Chaîne sous la forme "Sorties: nord, sud, est..." ou "Sorties:" si aucune sortie n'est définie.
@@ -71,7 +71,7 @@ class Room:
         Utilise une f-string pour insérer dynamiquement la description et la liste des sorties.
         Exemple : f"Vous êtes {self.description}"
 
-        Returns
+        Retourne
         -------
         str
             Texte complet décrivant la salle et ses sorties.
@@ -88,7 +88,7 @@ class Room:
         """
         Retourne l'inventaire des objets présents dans la salle.
 
-        Returns
+        Retourne
         -------
         dict
             Dictionnaire des objets dans la salle, où les clés sont les noms des objets et les valeurs sont les objets Item.

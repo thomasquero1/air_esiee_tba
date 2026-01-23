@@ -1,7 +1,7 @@
 from actor import Actor
 from config import DEBUG
 
-# Define the Player class.
+# Définir la classe Player.
 class Player(Actor):
     """
     Représente un joueur dans l'univers du jeu.
@@ -26,25 +26,25 @@ class Player(Actor):
         super().__init__(name, current_room=None)
         self.history = []
         self.inventory = {}
-        # score for identifying green keywords and completeness
+        # score pour l'identification des mots-clés verts et la complétude
         self.score = 0
-        # track found green phrases per item name: { item_name: set(phrases) }
+        # suivi des phrases vertes trouvées par item : { item_name: set(phrases) }
         self.item_progress = {}
-        # set of item names that have been fully completed
+        # ensemble des items entièrement complétés
         self.completed_items = set()
-        # set of completed quests
+        # ensemble des quêtes complétées
         self.completed_quests = set()
     
     def move(self, direction):
         """
         Déplace le joueur vers la salle située dans la direction spécifiée.
 
-        Parameters
+        Paramètres
         ----------
         direction : str
             Direction dans laquelle le joueur souhaite se déplacer.
 
-        Returns
+        Retourne
         -------
         bool
             True si le joueur a été déplacé avec succès, False si le déplacement est impossible.
@@ -56,7 +56,7 @@ class Player(Actor):
             if DEBUG: print(f"DEBUG: Pas de sortie {direction} disponible")
             print("\nAucune porte dans cette direction !\n")
             return False
-        # Prevent entering the cockpit from other rooms
+        # Empêcher l'accès au cockpit depuis d'autres salles
         if next_room.name == "Cockpit" and self.current_room.name != "Cockpit":
             if DEBUG: print(f"DEBUG: Accès au cockpit refusé depuis {self.current_room.name}")
             print("\nAccès refusé : personne ne peut entrer dans le cockpit.\n")
@@ -73,7 +73,7 @@ class Player(Actor):
         """
         Permet au joueur de revenir à la salle précédente.
 
-        Returns
+        Retourne
         -------
         bool
             True si le joueur a pu revenir en arrière, False si l'historique est vide.
@@ -91,7 +91,7 @@ class Player(Actor):
         """
         Retourne l'historique des salles visitées par le joueur.
 
-        Returns
+        Retourne
         -------
         chaine de caractères: lines
             Liste des salles visitées.
@@ -108,7 +108,7 @@ class Player(Actor):
         """
         Retourne l'inventaire des objets possédés par le joueur.
 
-        Returns
+        Retourne
         -------
         chaine de caractères: lines
             Liste des objets dans l'inventaire.
@@ -122,7 +122,7 @@ class Player(Actor):
         return "\n".join(lines)
 
     def award_points(self, points, reason=None):
-        """Add points to the player and print a short message."""
+        """Ajoute des points au joueur et affiche un court message."""
         self.score += points
         if reason:
             print(f"[+{points} pts] {reason} (Total: {self.score} pts)")
@@ -130,7 +130,7 @@ class Player(Actor):
             print(f"[+{points} pts] (Total: {self.score} pts)")
 
     def add_found_phrase(self, item_name, phrase):
-        """Record that the player found a phrase for a given item."""
+        """Enregistre que le joueur a trouvé une phrase pour un item donné."""
         s = self.item_progress.get(item_name)
         if s is None:
             s = set()

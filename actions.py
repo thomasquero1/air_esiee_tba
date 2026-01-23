@@ -106,17 +106,17 @@ class Actions:
         Affiche l'historique des salles visitées par le joueur.
 
 
-        Args:
-            game (Game): The game object.
-            list_of_words (list): The list of words in the command.
-            number_of_parameters (int): The number of parameters expected by the command.
+        Paramètres :
+            game (Game): L'objet jeu.
+            list_of_words (list): La liste des mots de la commande.
+            number_of_parameters (int): Le nombre de paramètres attendus par la commande.
 
 
-        Returns:
+        Retourne :
             bool: True si la commande a été exécutée avec succès, False sinon.
 
 
-        Examples:
+        Exemples :
 
 
         >>> from game import Game
@@ -134,7 +134,7 @@ class Actions:
 
 
         l = len(list_of_words)
-        # If the number of parameters is incorrect, print an error message and return False.
+        # Si le nombre de paramètres est incorrect, afficher un message d'erreur et retourner False.
         if l != number_of_parameters + 1:
             command_word = list_of_words[0]
             print(MSG0.format(command_word=command_word))
@@ -146,7 +146,7 @@ class Actions:
 
     @staticmethod
     def talk(game, list_of_words, number_of_parameters):
-        """Talk to a character in the current room."""
+        """Parler à un personnage dans la salle actuelle."""
         if len(list_of_words) != number_of_parameters + 1:
             print(MSG1.format(command_word=list_of_words[0]))
             return False
@@ -154,20 +154,20 @@ class Actions:
         character_name = list_of_words[1]
         room = game.player.current_room
         
-        # Find the character
+        # Trouver le personnage
         if character_name not in room.characters:
             print(f"Aucun personnage nommé {character_name} ici.")
             return False
         
         character = room.characters[character_name]
         
-        # Show character message
+        # Afficher le message du personnage
         if isinstance(character.msgs, list) and character.msgs:
             print(f"\n{character.name}: {character.next_msg()}\n")
         else:
             print(f"\n{character.name}: ...")
         
-        # Handle quests and points
+        # Gérer les quêtes et les points
         game._check_quests(character, room)
         
         return True

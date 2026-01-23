@@ -1,6 +1,6 @@
 """
 Script pour générer les images de base pour le jeu Air ESIEE.
-Ces images serviront de placeholders de haute qualité jusqu'à ce que vous les remplaciez
+Ces images serviront d'images temporaires de haute qualité jusqu'à ce que vous les remplaciez
 par vos propres images.
 """
 
@@ -36,18 +36,18 @@ def create_cockpit():
     draw.text((400, 450), "SYSTEMES AVIONIQUES - FCU", fill="#00ff00")
     
     # Instruments
-    draw.text((120, 520), "ALTITUDE: 35000 ft", fill="#00ff00")
-    draw.text((500, 520), "VITESSE: 450 kt", fill="#00ff00")
-    draw.text((920, 520), "HEADING: 090", fill="#00ff00")
+    draw.text((120, 520), "ALTITUDE : 35 000 ft", fill="#00ff00")
+    draw.text((500, 520), "VITESSE : 450 kt", fill="#00ff00")
+    draw.text((920, 520), "CAP : 090", fill="#00ff00")
     
-    draw.text((120, 580), "VERTICAL SPEED: 0 ft/min", fill="#00ff00")
-    draw.text((500, 580), "MACH: 0.78", fill="#00ff00")
-    draw.text((920, 580), "TEMP: -56C", fill="#00ff00")
+    draw.text((120, 580), "VITESSE VERTICALE : 0 ft/min", fill="#00ff00")
+    draw.text((500, 580), "MACH : 0,78", fill="#00ff00")
+    draw.text((920, 580), "TEMPÉRATURE : -56°C", fill="#00ff00")
     
-    draw.text((120, 650), "FUEL: 3000 kg", fill="#00ff00")
-    draw.text((500, 650), "ENGINES: N1 = 25%, N2 = 60%", fill="#00ff00")
-    draw.text((120, 720), "HYDRAULIC: GREEN", fill="#00ff00")
-    draw.text((500, 720), "ELECTRICAL: 28.5V", fill="#00ff00")
+    draw.text((120, 650), "CARBURANT : 3000 kg", fill="#00ff00")
+    draw.text((500, 650), "MOTEURS : N1 = 25 %, N2 = 60 %", fill="#00ff00")
+    draw.text((120, 720), "HYDRAULIQUE : VERTE", fill="#00ff00")
+    draw.text((500, 720), "ÉLECTRIQUE : 28,5 V", fill="#00ff00")
     
     img.save(os.path.join(images_dir, "Cockpit.jpg"), quality=95)
     print("✓ Cockpit.jpg créé")
@@ -82,7 +82,7 @@ def create_central_panel():
     # Écran ECAM
     draw.rectangle([80, 150, 1200, 850], fill="#0a0a0a", outline="#ff8800", width=3)
     
-    draw.text((120, 180), "ECAM STATUS - PHASE CROISIERE", fill="#ff8800")
+    draw.text((120, 180), "STATUT ECAM - PHASE CROISIÈRE", fill="#ff8800")
     draw.line([(120, 220), (1180, 220)], fill="#ff8800", width=2)
     
     # Systèmes
