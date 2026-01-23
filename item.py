@@ -34,3 +34,5 @@ class Item:
     def __str__(self):
         count_display = f" (x{self.use_count})" if self.use_count > 0 else ""
         return f"{self.name} ({self.weight} kg): {self.description}{count_display}"
+
+# Fin du fichier

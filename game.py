@@ -575,7 +575,7 @@ class Game:
         
         # Quête: Parler à passenger2 avec la trousse médicale
         if character.name == "passenger2":
-            if "Trousse médicale" in self.player.inventory and "passenger2_quest" not in self.player.completed_quests:
+            if "TrousseMédicale" in self.player.inventory and "passenger2_quest" not in self.player.completed_quests:
                 self.player.completed_quests.add("passenger2_quest")
                 self.player.award_points(7, reason="Quête complétée: Passager malade secouru avec trousse médicale")
                 print(f"Le passager vous remercie: 'Merci pour votre aide, je me sens mieux maintenant!'")
@@ -623,3 +623,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+# Fin du fichier

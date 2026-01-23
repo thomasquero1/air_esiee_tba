@@ -37,3 +37,5 @@ class Inventory:
         for item in self.items.values():
             item_list += f"- {item}\n"
         return item_list
+
+# Fin du fichier

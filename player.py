@@ -136,3 +136,5 @@ class Player(Actor):
             s = set()
             self.item_progress[item_name] = s
         s.add(phrase)
+
+# Fin du fichier

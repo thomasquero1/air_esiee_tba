@@ -56,3 +56,5 @@ class Character(Actor):
         msg = self.msgs.pop(0)
         self.msgs.append(msg)
         return msg
+
+# Fin du fichier

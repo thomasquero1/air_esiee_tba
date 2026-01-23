@@ -425,3 +425,5 @@ if __name__ == "__main__":
         print("Au revoir!")
     else:
         print("Choix invalide")
+
+# Fin du fichier

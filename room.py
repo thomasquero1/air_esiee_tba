@@ -100,3 +100,5 @@ class Room:
         for item_name, item in self.inventory.items():
             lines.append(f"\t- {str(item)}\n")
         return "\n".join(lines)
+
+# Fin du fichier
